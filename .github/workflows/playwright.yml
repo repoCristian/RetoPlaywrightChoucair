@@ -1,39 +1,92 @@
-# Nombre que verás en la pestaña Actions de GitHub
-name: Playwright BDD
+# Nombre que aparecerá en la pestaña Actions de GitHub
+name: Playwright BDD CI/CD
 
-# Ejecutar al subir cambios o al abrir un pull request hacia main
+# Eventos que inician el flujo
 on:
+  # Ejecuta el flujo cuando se suben cambios a main
   push:
     branches: [main]
-  pull_request:
-    branches: [main]
 
+  # Permite iniciar el flujo manualmente desde GitHub
+  workflow_dispatch:
+
+# Permisos que necesitan los trabajos
+permissions:
+  # Permite leer el código del repositorio
+  contents: read
+  # Permite publicar el sitio en GitHub Pages
+  pages: write
+  # Permite que GitHub Pages autentique el despliegue
+  id-token: write
+
+# Evita que varios despliegues de Pages se pisen entre sí
+concurrency:
+  group: github-pages
+  # No cancela un despliegue que ya esté en curso
+  cancel-in-progress: false
+
+# Trabajos que ejecutará el flujo
 jobs:
+
+  # Primer trabajo: integración continua (CI) y pruebas BDD
   bdd:
-    # Ejecutar en una máquina Ubuntu de GitHub
+    # Ejecuta este trabajo en una máquina Ubuntu de GitHub
     runs-on: ubuntu-latest
 
+    # Pasos que se ejecutan en orden
     steps:
-      # Descargar el repositorio
+      # Descarga el código del repositorio en la máquina
       - name: Obtener el código
         uses: actions/checkout@v4
 
-      # Instalar Node.js
-      - name: Configurar Node.js
+      # Instala Node.js 22 y guarda en caché las dependencias de npm
+      - name: Configurar Node.js 22
         uses: actions/setup-node@v4
         with:
           node-version: 22
+          cache: npm
 
-      # Instalar las dependencias definidas en package.json/package-lock.json
+      # Instala las dependencias usando package-lock.json
       - name: Instalar dependencias
         run: npm ci
 
-      # Instalar los navegadores de Playwright y dependencias de Linux
-      - name: Instalar navegadores
+      # Instala los navegadores de Playwright y sus dependencias de Ubuntu
+      - name: Instalar navegadores de Playwright
         run: npx playwright install --with-deps
 
-      # Ejecutar tu script existente:
-      # cucumber-js --require-module ts-node/register
-      # --require ./tests/step_definitions/*.ts ./tests/features
-      - name: Ejecutar escenarios BDD
-        run: npm run bdd
+      # Ejecuta el script bdd y genera un reporte HTML de Cucumber
+      # Si las pruebas fallan, el trabajo se detiene y no habrá despliegue
+      - name: Ejecutar BDD y generar reporte HTML
+        run: npm run bdd -- --format html:reports/cucumber-report.html
+
+      # Copia el reporte como index.html para que sea la página inicial de Pages
+      - name: Preparar página de inicio
+        run: cp reports/cucumber-report.html reports/index.html
+
+      # Empaqueta la carpeta reports para que el trabajo deploy la publique
+      - name: Subir reporte para GitHub Pages
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: reports/
+
+  # Segundo trabajo: despliegue continuo (CD) del reporte
+  deploy:
+    # Solo despliega si se está ejecutando en la rama main
+    if: github.ref == 'refs/heads/main'
+
+    # Espera al trabajo bdd; si este falla, no despliega
+    needs: bdd
+
+    # El despliegue también se ejecuta en una máquina Ubuntu de GitHub
+    runs-on: ubuntu-latest
+
+    # Registra el entorno y muestra la URL del sitio publicado
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      # Publica el reporte previamente empaquetado en GitHub Pages
+      - name: Desplegar reporte
+        id: deployment
+        uses: actions/deploy-pages@v4
