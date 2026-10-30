@@ -1,0 +1,35 @@
+trigger:
+- main
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+steps:
+# Paso A: Instala Node.js en el servidor de Azure
+- task: NodeTool@0
+  inputs:
+    versionSpec: '20.x'
+  displayName: '1. Instalar Node.js'
+
+# Paso B: Instala las dependencias del proyecto (las librerías de tu package.json)
+- script: npm ci
+  displayName: '2. Instalar dependencias del proyecto'
+
+# Paso C: Instalar los navegadores de Playwright que necesita Linux para correr
+- script: npx playwright install --with-deps
+  displayName: '3. Instalar navegadores de Playwright'
+
+# Paso D: Ejecuta las pruebas con el comando de BDD
+- script: npm run bdd
+  displayName: '4. Ejecutar Pruebas Automatizadas'
+  env:
+    CI: 'true'
+
+# Paso E: Toma el reporte final y lo guarda en Azure DevOps (CD)
+- task: PublishPipelineArtifact@1
+  inputs:
+    targetPath: '$(System.DefaultWorkingDirectory)/playwright-report'
+    artifact: 'playwright-report'
+    publishLocation: 'pipeline'
+  displayName: '5. Guardar Reporte de Playwright'
+  condition: always() # Para que Azure guardar el reporte aunque una prueba falle

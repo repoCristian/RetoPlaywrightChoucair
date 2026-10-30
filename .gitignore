@@ -1,0 +1,21 @@
+# Dependencias de Node
+node_modules/
+npm-debug.log*
+
+# Reportes y resultados de Playwright
+playwright-report/
+blob-report/
+playwright/.local-browsers/
+test-results/
+
+# Archivos temporales generados por la integración de BDD (Cucumber/Playwright-BDD)
+.features-gen/
+
+# Variables de entorno y secretos
+.env
+.env.*
+!.env.example
+
+# Archivos del sistema operativo
+.DS_Store
+Thumbs.db

@@ -1,0 +1,22 @@
+{
+  "name": "demo_web_shop",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "bdd": "cucumber-js --require-module ts-node/register --require ./tests/step_definitions/*.ts ./tests/features",
+    "smoke": "cucumber-js --require-module ts-node/register --require ./tests/step_definitions/*.ts --tags @smoke ./tests/features"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "@cucumber/cucumber": "^13.3.0",
+    "@playwright/test": "^1.64.0",
+    "@types/node": "^26.6.5",
+    "playwright-bdd": "^9.2.1",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.3.3"
+  }
+}
