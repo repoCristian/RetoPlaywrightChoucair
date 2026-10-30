@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "bdd": "cucumber-js --require-module ts-node/register --require ./tests/step_definitions/*.ts ./tests/features",
+    "bdd": "cucumber-js --require-module ts-node/register --require \"./tests/step_definitions/**/*.ts\" ./tests/features",
     "smoke": "cucumber-js --require-module ts-node/register --require ./tests/step_definitions/*.ts --tags @smoke ./tests/features"
   },
   "keywords": [],
