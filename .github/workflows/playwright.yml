@@ -1,66 +1,39 @@
-```yaml
-# Nombre que aparecerá en la pestaña "Actions" de GitHub
-name: Playwright Tests
+# Nombre que verás en la pestaña Actions de GitHub
+name: Playwright BDD
 
-# Eventos que activan este workflow
+# Ejecutar al subir cambios o al abrir un pull request hacia main
 on:
-  # Ejecutarlo cuando se suban cambios a la rama main
   push:
     branches: [main]
-
-  # Ejecutarlo cuando se cree o actualice un pull request dirigido a main
   pull_request:
     branches: [main]
 
-# Trabajos que GitHub ejecutará
 jobs:
-  # Nombre de este trabajo; puedes cambiarlo
-  test:
-    # Usar una máquina Linux temporal de GitHub
+  bdd:
+    # Ejecutar en una máquina Ubuntu de GitHub
     runs-on: ubuntu-latest
 
-    # Pasos que se ejecutan, en orden
     steps:
-      # Descargar el código de este repositorio en la máquina
-      - name: Descargar el código
-        uses: actions/checkout@v6
+      # Descargar el repositorio
+      - name: Obtener el código
+        uses: actions/checkout@v4
 
-      # Instalar Node.js para ejecutar el proyecto
+      # Instalar Node.js
       - name: Configurar Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v4
         with:
-          # Usar la versión LTS de Node.js
-          node-version: lts/*
+          node-version: 22
 
-      # Instalar las dependencias usando package-lock.json
-      - name: Instalar dependencias del proyecto
+      # Instalar las dependencias definidas en package.json/package-lock.json
+      - name: Instalar dependencias
         run: npm ci
 
-      # Instalar los navegadores de Playwright y sus dependencias del sistema
-      - name: Instalar navegadores de Playwright
+      # Instalar los navegadores de Playwright y dependencias de Linux
+      - name: Instalar navegadores
         run: npx playwright install --with-deps
 
-      # Ejecutar las pruebas definidas en el proyecto
-      - name: Ejecutar pruebas
-        run: npx playwright test
-
-      # Guardar el reporte incluso si las pruebas fallaron,
-      # siempre que la ejecución no haya sido cancelada
-      - name: Guardar el reporte HTML
-        if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@v5
-        with:
-          # Nombre del archivo que podrás descargar desde la ejecución
-          name: playwright-report
-
-          # Carpeta donde Playwright genera el reporte HTML
-          path: playwright-report/
-
-          # No marcar el workflow como fallido si no se generó el reporte
-          if-no-files-found: ignore
-
-          # Conservar el reporte durante 14 días
-          retention-days: 14
-```
-
-Si tu rama principal no se llama `main`, cambia `main` en los dos lugares por el nombre correcto. Este ejemplo es para un proyecto Playwright de JavaScript/TypeScript con npm; `npm ci` requiere que el repositorio incluya `package-lock.json`.
+      # Ejecutar tu script existente:
+      # cucumber-js --require-module ts-node/register
+      # --require ./tests/step_definitions/*.ts ./tests/features
+      - name: Ejecutar escenarios BDD
+        run: npm run bdd
